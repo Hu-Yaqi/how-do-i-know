@@ -1,0 +1,1475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Do I Know?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Josefin+Sans:wght@400;600;700&family=Limelight&display=swap">
+<style>
+/* Layout: one fixed theatre screen. Velvet curtains frame the stage; the marquee and the magician's
+   lines sit on top, three balls on brass stands run across the middle, and the presenter's buttons
+   sit on the footlights. The "behind the curtain" sheet switches to the camera's cool cyan look. */
+:root {
+  color-scheme: dark;
+  --house: #0b0507;
+  --velvet: #7c1020;
+  --velvet-deep: #33050d;
+  --velvet-hi: #b8293f;
+  --brass: #e0b25a;
+  --brass-hi: #ffe7a6;
+  --brass-deep: #7d5720;
+  --ink: #f7ecd8;
+  --ink-dim: #cdb898;
+  --machine: #6ff2df;
+  --machine-bg: #071315;
+  --machine-line: #17393b;
+  --sheet-ink: #dcefeb;
+  --sheet-dim: #8fb3ad;
+  --red: #e8253f;    --red-dk: #5e0313;    --red-word: #ff6b7d;
+  --blue: #2f6cff;   --blue-dk: #081a5c;   --blue-word: #86a9ff;
+  --yellow: #ffd21a; --yellow-dk: #a35f00; --yellow-word: #ffdd55;
+  --display: "Limelight", "Didot", "Bodoni 72", Georgia, serif;
+  --body: "Josefin Sans", "Futura", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --valance: clamp(48px, 10vh, 104px);
+  --curtain-w: clamp(56px, 14vw, 240px);
+  --ball: min(16.5vw, 27vh);
+  --stand: calc(var(--ball) * 0.36);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--house);
+  color: var(--ink);
+  font-family: var(--body);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; }
+:focus-visible { outline: 3px solid var(--machine); outline-offset: 3px; }
+
+/* ---------------- the venue (decoration only) ---------------- */
+.venue { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+.venue::after {
+  content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .6);
+  opacity: 0; transition: opacity 1.2s ease;
+}
+body.lights-down .venue::after { opacity: 1; }
+.backdrop {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 55%, rgba(255, 190, 120, .12), transparent 70%),
+    linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.15) 30%, rgba(0,0,0,.2) 60%, rgba(0,0,0,.85)),
+    repeating-linear-gradient(90deg, #26050c 0, #43091a 1.6vw, #2c0610 3.2vw, #1a0308 4.2vw);
+}
+.beam {
+  position: absolute; top: -8vh; width: 34vw; height: 108vh; transform-origin: 50% 0;
+  background: linear-gradient(to bottom, rgba(255, 236, 190, .34), rgba(255, 236, 190, .05) 80%, transparent);
+  clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%);
+  filter: blur(6px); mix-blend-mode: screen; opacity: .5;
+}
+.beam.l { left: 2vw; rotate: -24deg; animation: sway-l 9s ease-in-out infinite alternate; }
+.beam.r { right: 2vw; rotate: 24deg; animation: sway-r 11s ease-in-out infinite alternate; }
+@keyframes sway-l { to { rotate: -15deg; } }
+@keyframes sway-r { to { rotate: 15deg; } }
+.floor {
+  position: absolute; left: -30%; right: -30%; bottom: 11vh; height: 46vh;
+  transform-origin: 50% 100%; transform: perspective(60vh) rotateX(52deg);
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,.8), rgba(0,0,0,.15) 55%, rgba(0,0,0,.3)),
+    repeating-linear-gradient(90deg, #3a2414 0, #5a3820 2.6vw, #4a2d18 5vw, #1d1008 5.2vw);
+}
+.apron {
+  position: absolute; left: 0; right: 0; bottom: 8vh; height: 3vh;
+  background: linear-gradient(#2a170c, #120a05); border-top: 2px solid var(--brass-deep);
+}
+.footlights {
+  position: absolute; left: 0; right: 0; bottom: calc(11vh - .6vh); height: 1.4vh;
+  background: radial-gradient(ellipse 1.2vw .6vh at 50% 50%, #fff1c4 0, rgba(255, 200, 110, .9) 35%, transparent 70%) 0 0 / 6vw 100% repeat-x;
+  filter: drop-shadow(0 -1vh 1.4vh rgba(255, 200, 120, .55));
+}
+#motes { position: absolute; inset: 0; width: 100%; height: 100%; }
+.curtain {
+  position: absolute; top: 0; bottom: 0; width: var(--curtain-w);
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,.55), transparent 25%, transparent 80%, rgba(0,0,0,.6)),
+    linear-gradient(90deg, transparent 55%, rgba(0,0,0,.45)),
+    repeating-linear-gradient(90deg, var(--velvet-deep) 0, var(--velvet) 1vw, var(--velvet-hi) 1.6vw, var(--velvet) 2.3vw, var(--velvet-deep) 3.2vw);
+  clip-path: polygon(0 0, 100% 0, 93% 10%, 82% 22%, 66% 36%, 52% 49%, 42% 59%, 40% 63%, 45% 69%, 57% 79%, 71% 90%, 84% 100%, 0 100%);
+}
+.curtain.left { left: 0; }
+.curtain.right { right: 0; transform: scaleX(-1); }
+.tie {
+  position: absolute; top: 61.5vh; width: calc(var(--curtain-w) * .3); height: 1.5vh; border-radius: 999px;
+  background: linear-gradient(var(--brass-hi), var(--brass) 50%, var(--brass-deep));
+  box-shadow: 0 .4vh .8vh rgba(0,0,0,.6);
+}
+.tie::after {
+  content: ""; position: absolute; left: 70%; top: 60%; width: .9vw; height: 5vh;
+  background: repeating-linear-gradient(90deg, var(--brass) 0 2px, var(--brass-deep) 2px 3px);
+  clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+}
+.tie.left { left: calc(var(--curtain-w) * .25); rotate: -14deg; }
+.tie.right { right: calc(var(--curtain-w) * .25); rotate: 14deg; }
+.valance {
+  --s: clamp(10px, 2.4vh, 24px);
+  position: absolute; top: 0; left: 0; right: 0; height: var(--valance);
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,.4), transparent 70%),
+    repeating-linear-gradient(90deg, var(--velvet-deep) 0, var(--velvet) 1.4vw, var(--velvet-hi) 2.2vw, var(--velvet) 3vw, var(--velvet-deep) 4vw);
+  -webkit-mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--s)) no-repeat,
+    radial-gradient(ellipse 50% 100% at 50% 0, #000 97%, transparent 100%) bottom / 7vw var(--s) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--s)) no-repeat,
+    radial-gradient(ellipse 50% 100% at 50% 0, #000 97%, transparent 100%) bottom / 7vw var(--s) repeat-x;
+}
+.valance.trim { top: 5px; background: linear-gradient(var(--brass-hi), var(--brass) 70%, var(--brass-deep)); }
+.audience {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 12vh;
+  background:
+    radial-gradient(circle 1.7vw at 50% 42%, #040102 97%, transparent 100%) 2.6vw 2.6vh / 7.4vw 9vh repeat-x,
+    radial-gradient(ellipse 3vw 3vh at 50% 100%, #040102 97%, transparent 100%) 2.6vw 2.6vh / 7.4vw 9vh repeat-x,
+    radial-gradient(circle 1.3vw at 50% 42%, #0a0305 97%, transparent 100%) 0 0 / 6vw 7vh repeat-x,
+    radial-gradient(ellipse 2.3vw 2.4vh at 50% 100%, #0a0305 97%, transparent 100%) 0 0 / 6vw 7vh repeat-x;
+}
+
+/* ---------------- the show (interactive layer) ---------------- */
+.show {
+  position: fixed; inset: 0; z-index: 2;
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; justify-items: center; row-gap: 1.1vh;
+  padding: calc(var(--valance) + 1vh) clamp(16px, 6vw, 110px) 12.5vh;
+}
+.marquee {
+  display: flex; align-items: center; gap: .7em;
+  padding: .3em 1.1em .25em; border: .42rem dotted var(--brass-hi); border-radius: 1.1rem;
+  background: linear-gradient(#2a0710, #12030a);
+  box-shadow: 0 0 0 .25rem var(--brass-deep), 0 0 2.4rem rgba(255, 210, 120, .3), inset 0 0 1.5rem rgba(0,0,0,.8);
+  filter: drop-shadow(0 0 .35rem rgba(255, 225, 150, .55));
+  animation: bulbs 2.4s ease-in-out infinite alternate;
+}
+@keyframes bulbs { to { filter: drop-shadow(0 0 .6rem rgba(255, 225, 150, .85)); } }
+.marquee h1 {
+  margin: 0; font-family: var(--display); font-weight: 400; line-height: 1.05;
+  font-size: clamp(1.5rem, 3.6vw, 3.2rem); letter-spacing: .04em;
+  background: linear-gradient(to bottom, #fff6d6 10%, var(--brass) 62%, var(--brass-deep));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.marquee .tag {
+  display: block; font-size: clamp(.58rem, .85vw, .78rem); letter-spacing: .3em; text-transform: uppercase;
+  color: var(--ink-dim); text-align: center; margin-top: .2em;
+}
+.emblem { width: clamp(28px, 3.2vw, 50px); height: auto; flex: none; overflow: visible; filter: drop-shadow(0 0 .4rem rgba(190, 160, 255, .6)); }
+.emblem .swirl { fill: none; stroke: rgba(255,255,255,.7); stroke-width: 1.6; stroke-linecap: round; }
+.emblem .base { fill: var(--brass); }
+
+.patter {
+  max-width: 50rem; min-height: 5.4em; text-align: center;
+  display: flex; flex-direction: column; justify-content: center; gap: .4em;
+}
+.patter .line {
+  margin: 0; font-weight: 600; font-size: clamp(1.1rem, 2.1vw, 1.95rem); line-height: 1.25;
+  text-wrap: balance; text-shadow: 0 2px 14px rgba(0,0,0,.85);
+}
+.patter .line em { font-family: var(--display); font-style: normal; font-weight: 400; color: var(--brass-hi); }
+.patter .sub { margin: 0; font-size: clamp(.85rem, 1.15vw, 1.1rem); line-height: 1.4; color: var(--ink-dim); text-wrap: balance; }
+.patter .sub b { color: var(--ink); }
+.w-red { color: var(--red-word); } .w-blue { color: var(--blue-word); } .w-yellow { color: var(--yellow-word); }
+.w-red, .w-blue, .w-yellow { letter-spacing: .06em; }
+.timer { width: min(24rem, 60vw); height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; margin: .3em auto 0; }
+.timer i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--brass-deep), var(--brass-hi)); }
+
+.stage { position: relative; justify-self: stretch; width: 100%; height: 100%; }
+.spot {
+  position: absolute; bottom: 0; height: 130%; left: 50%; width: 100%; translate: -50% 0; z-index: 0;
+  background: radial-gradient(ellipse 50% 50% at 50% 62%, rgba(255, 236, 190, .2), transparent 70%);
+  opacity: 0; pointer-events: none; transition: opacity .9s ease, left .8s ease, width .8s ease;
+}
+body.lights-down .spot { opacity: 1; }
+.stand { position: absolute; bottom: 0; width: calc(var(--ball) * .56); height: var(--stand); transform: translateX(-50%); z-index: 1; }
+.stand .col {
+  position: absolute; left: 50%; width: 20%; top: 14%; bottom: 10%; transform: translateX(-50%);
+  background: linear-gradient(90deg, var(--brass-deep), var(--brass-hi) 35%, var(--brass) 60%, var(--brass-deep));
+}
+.stand .foot {
+  position: absolute; left: 8%; right: 8%; bottom: 0; height: 22%; border-radius: 50%;
+  background: linear-gradient(var(--brass), var(--brass-deep)); box-shadow: 0 .6rem 1.2rem rgba(0,0,0,.7);
+}
+.stand .dish {
+  position: absolute; left: 0; right: 0; top: 0; height: 28%; border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 30%, var(--brass-hi), var(--brass) 45%, var(--brass-deep) 85%);
+  box-shadow: inset 0 -.3rem .5rem rgba(0,0,0,.4);
+}
+
+.ball-wrap { position: absolute; left: 0; bottom: calc(var(--stand) * .84); width: var(--ball); z-index: 2; }
+.ball-wrap[data-ball="red"] { --c: var(--red); --c-dk: var(--red-dk); --label: rgba(255,255,255,.82); }
+.ball-wrap[data-ball="blue"] { --c: var(--blue); --c-dk: var(--blue-dk); --label: rgba(255,255,255,.82); }
+.ball-wrap[data-ball="yellow"] { --c: var(--yellow); --c-dk: var(--yellow-dk); --label: rgba(70,35,0,.72); }
+.ball {
+  position: relative; width: 100%; aspect-ratio: 1; border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.95) 0 3%, rgba(255,255,255,.35) 9%, transparent 22%),
+    radial-gradient(circle at 45% 42%, var(--c) 0 42%, var(--c-dk) 100%);
+  box-shadow: inset calc(var(--ball) * -.05) calc(var(--ball) * -.07) calc(var(--ball) * .12) rgba(0,0,0,.4),
+              0 calc(var(--ball) * .05) calc(var(--ball) * .09) rgba(0,0,0,.55);
+  transition: box-shadow .45s ease, filter .45s ease, translate .7s cubic-bezier(.2,.8,.2,1);
+}
+.ball-name {
+  position: absolute; left: 0; right: 0; bottom: 19%; text-align: center;
+  font-weight: 700; font-size: calc(var(--ball) * .085); letter-spacing: .22em; text-indent: .22em;
+  color: var(--label); text-transform: uppercase; user-select: none;
+}
+.ring { position: absolute; inset: -9%; width: 118%; height: 118%; opacity: 0; transition: opacity .25s; overflow: visible; }
+.ring circle { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset .12s linear; }
+.ring.live circle { stroke: var(--machine); }
+.ball-wrap.glow .ball {
+  box-shadow: inset calc(var(--ball) * -.05) calc(var(--ball) * -.07) calc(var(--ball) * .12) rgba(0,0,0,.35),
+              0 0 calc(var(--ball) * .3) calc(var(--ball) * .05) var(--c);
+  filter: brightness(1.12);
+}
+.ball-wrap.dim .ball { filter: saturate(.35) brightness(.42); }
+.ball-wrap.chosen .ball {
+  translate: 0 -16%;
+  box-shadow: inset calc(var(--ball) * -.05) calc(var(--ball) * -.07) calc(var(--ball) * .12) rgba(0,0,0,.3),
+              0 0 calc(var(--ball) * .45) calc(var(--ball) * .08) var(--c);
+  filter: brightness(1.15);
+}
+/* smoke that appears inside a ball during the breathing ritual */
+.smoke { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+.smoke i {
+  position: absolute; inset: -20%; border-radius: 45%; mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse 32% 16% at 38% 46%, rgba(255,255,255,.8), transparent 70%),
+    radial-gradient(ellipse 20% 30% at 64% 56%, rgba(255,255,255,.6), transparent 70%),
+    radial-gradient(ellipse 26% 12% at 50% 70%, rgba(255,255,255,.45), transparent 70%);
+  filter: blur(calc(var(--ball) * .035));
+  animation: swirl 8s linear infinite;
+}
+.smoke i:nth-child(2) { scale: .78; opacity: .85; animation-duration: 12s; animation-direction: reverse; }
+.smoke i:nth-child(3) { scale: .5; opacity: .9; animation-duration: 5.5s; }
+@keyframes swirl { from { rotate: 0deg; translate: 0 2%; } 50% { translate: 0 -3%; } to { rotate: 360deg; translate: 0 2%; } }
+.ball-wrap.smoky .smoke { opacity: 1; }
+body.breathing .ball { animation: breathe 7s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { scale: 1; } 50% { scale: 1.07; } }
+
+.gaze-mark {
+  position: absolute; z-index: 4; width: 34px; height: 34px; left: 50%;
+  bottom: calc(var(--stand) * .84 + var(--ball) / 2); translate: -50% 50%;
+  border: 2px solid var(--machine); border-radius: 50%; box-shadow: 0 0 12px var(--machine);
+  transition: left .1s linear; pointer-events: none;
+}
+.gaze-mark::before, .gaze-mark::after { content: ""; position: absolute; background: var(--machine); }
+.gaze-mark::before { left: 50%; top: -9px; bottom: -9px; width: 2px; translate: -50% 0; }
+.gaze-mark::after { top: 50%; left: -9px; right: -9px; height: 2px; translate: 0 -50%; }
+
+.wand {
+  position: absolute; left: 0; top: 0; z-index: 6; pointer-events: none;
+  width: calc(var(--ball) * .07); height: calc(var(--ball) * .9); border-radius: 999px; transform-origin: 50% 100%;
+  background: linear-gradient(to bottom, #f4f0e8 0 13%, #121012 13% 87%, #f4f0e8 87%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.15), .4rem .6rem 1rem rgba(0,0,0,.6);
+}
+.wand::after {
+  content: ""; position: absolute; left: 50%; bottom: 0; width: 300%; aspect-ratio: 1; translate: -50% 50%;
+  background: radial-gradient(circle, #fff 0 12%, rgba(255, 240, 190, .8) 22%, transparent 62%);
+}
+.spark {
+  position: absolute; z-index: 7; width: 12px; height: 12px; pointer-events: none;
+  background: radial-gradient(circle, #fff 0 25%, var(--brass-hi) 45%, transparent 70%);
+}
+
+.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: .7rem; max-width: min(62vw, 46rem); min-height: 3rem; }
+.btn {
+  font-family: var(--body); font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  font-size: clamp(.78rem, 1.02vw, 1rem); line-height: 1; padding: .95em 1.4em .8em; border-radius: .5rem;
+  border: 1px solid var(--brass); background: rgba(20, 4, 8, .88); color: var(--brass-hi); cursor: pointer;
+  transition: transform .12s ease, box-shadow .2s ease;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 0 1rem rgba(255, 210, 120, .3); }
+.btn.primary {
+  background: linear-gradient(var(--brass-hi), var(--brass) 55%, var(--brass-deep));
+  color: #2a0710; border-color: var(--brass-hi); box-shadow: 0 0 1.3rem rgba(255, 210, 120, .4);
+}
+
+/* crystal ball = the live camera view */
+.crystal {
+  position: fixed; z-index: 3; left: clamp(10px, 1.6vw, 28px); bottom: 2.2vh; margin: 0;
+  width: min(13vw, 21vh); min-width: 96px; display: grid; justify-items: center; gap: .35rem;
+}
+.orb {
+  position: relative; width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: #120a1e;
+  box-shadow: 0 0 0 3px rgba(190, 160, 255, .35), 0 0 2.4rem rgba(160, 120, 255, .45), inset 0 0 2rem rgba(120, 80, 200, .6);
+}
+.orb canvas { display: none; width: 100%; height: 100%; }
+.crystal.secret .orb canvas { display: block; }
+.crystal.secret .mist { display: none; }
+.mist { position: absolute; inset: 0; opacity: .45; transition: opacity 1s ease; }
+.mist i {
+  position: absolute; inset: -15%; border-radius: 45%; mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse 30% 15% at 40% 45%, rgba(225, 205, 255, .8), transparent 70%),
+    radial-gradient(ellipse 18% 28% at 62% 58%, rgba(200, 170, 255, .6), transparent 70%);
+  filter: blur(6px); animation: swirl 9s linear infinite;
+}
+.mist i:nth-child(2) { scale: .7; animation-duration: 6s; animation-direction: reverse; }
+.crystal.connected .mist { opacity: 1; }
+.crystal.connected .orb { box-shadow: 0 0 0 3px rgba(220, 200, 255, .6), 0 0 3.4rem rgba(190, 150, 255, .8), inset 0 0 2rem rgba(150, 110, 230, .7); }
+.orb { transition: box-shadow 1s ease; }
+.orb::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.4), transparent 26%), radial-gradient(circle at 50% 50%, transparent 58%, rgba(70, 30, 140, .55));
+}
+.orb-base {
+  width: 64%; height: 1.2rem; margin-top: -.9rem; border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  background: linear-gradient(var(--brass-hi), var(--brass) 40%, var(--brass-deep));
+}
+.crystal figcaption {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; color: var(--machine);
+  background: rgba(4, 12, 13, .85); border: 1px solid var(--machine-line); border-radius: 999px; padding: .25em .8em;
+}
+.crystal figcaption.bad { color: #ff9aa8; }
+
+.house-panel {
+  position: fixed; z-index: 3; right: clamp(10px, 1.6vw, 28px); bottom: 2.2vh;
+  display: grid; justify-items: end; gap: .5rem; max-width: 40vw;
+}
+.score {
+  font-family: var(--display); font-size: clamp(.9rem, 1.3vw, 1.2rem); color: var(--brass-hi);
+  background: rgba(20, 4, 8, .85); border: 1px solid var(--brass-deep); border-radius: .5rem; padding: .35em .8em;
+  font-variant-numeric: tabular-nums;
+}
+.toggles { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem; }
+.chip {
+  font-family: var(--mono); font-size: .72rem; color: var(--ink-dim); cursor: pointer;
+  background: rgba(10, 3, 5, .85); border: 1px solid #4a2a20; border-radius: 999px; padding: .35em .75em;
+}
+.chip[aria-pressed="true"] { color: var(--machine); border-color: var(--machine-line); }
+.chip kbd { font-family: inherit; opacity: .6; margin-left: .3em; }
+
+/* ---------------- behind the curtain ---------------- */
+.backstage {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 3vh 16px;
+  background: rgba(2, 6, 7, .74); backdrop-filter: blur(3px);
+}
+.sheet {
+  width: min(1100px, 100%); max-height: 94vh; overflow: auto; border-radius: 14px;
+  padding: clamp(18px, 3vw, 38px); color: var(--sheet-ink);
+  border: 1px solid var(--machine-line); box-shadow: 0 2rem 5rem rgba(0,0,0,.6);
+  background-color: var(--machine-bg);
+  background-image: linear-gradient(rgba(111,242,223,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(111,242,223,.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.sheet-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.eyebrow { margin: 0; font-family: var(--mono); font-size: .76rem; letter-spacing: .22em; text-transform: uppercase; color: var(--machine); }
+.sheet h2 { margin: .15em 0 0; font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 3vw, 2.5rem); color: var(--brass-hi); text-wrap: balance; }
+.sheet h3 { margin: 0 0 .7em; font-family: var(--mono); font-weight: 500; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--machine); }
+.sheet p, .sheet li { font-size: 1.02rem; line-height: 1.55; max-width: 64ch; }
+.sheet p { margin: 0 0 1em; }
+.sheet .close {
+  font-family: var(--mono); font-size: .85rem; color: var(--machine); cursor: pointer;
+  background: transparent; border: 1px solid var(--machine-line); border-radius: .45rem; padding: .6em 1em;
+}
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: clamp(22px, 3.2vw, 48px); margin-top: 1.6rem; }
+.cols > * { min-width: 0; }
+.timeline { display: flex; height: 34px; border-radius: 6px; overflow: hidden; border: 1px solid var(--machine-line); margin-top: .4rem; }
+.timeline span { min-width: 1px; }
+.timeline .t-red { background: var(--red); } .timeline .t-blue { background: var(--blue); } .timeline .t-yellow { background: var(--yellow); }
+.timeline .t-none { background: repeating-linear-gradient(135deg, #20302f 0 4px, #0e1a1b 4px 8px); }
+.axis { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .72rem; color: var(--sheet-dim); margin: .3rem 0 1.4rem; }
+.dwell { display: grid; grid-template-columns: 5.2rem minmax(0, 1fr) 3.6rem; gap: .55rem .8rem; align-items: center; margin-bottom: 1.4rem; }
+.dwell .name { font-weight: 700; letter-spacing: .06em; }
+.dwell .track { height: 14px; border-radius: 3px; background: rgba(255,255,255,.07); overflow: hidden; }
+.dwell .fill { height: 100%; border-radius: 3px; }
+.dwell .secs { font-family: var(--mono); font-size: .9rem; text-align: right; font-variant-numeric: tabular-nums; }
+.dwell .win { color: var(--brass-hi); }
+.stats { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .45rem 1rem; margin: 0; font-size: .92rem; }
+.stats dt { font-family: var(--mono); color: var(--sheet-dim); font-size: .8rem; padding-top: .15em; }
+.stats dd { margin: 0; }
+.steps { margin: 0 0 1.4rem; padding-left: 1.4rem; display: grid; gap: .6rem; }
+.steps li::marker { font-family: var(--mono); color: var(--machine); }
+.steps b, .sheet p b { color: #fff; }
+.glossary { margin-top: 1.6rem; border-top: 1px solid var(--machine-line); padding-top: 1.2rem; }
+.glossary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .9rem 2rem; margin: 0; }
+.glossary dt { font-family: var(--mono); color: var(--machine); font-size: .85rem; }
+.glossary dd { margin: .2rem 0 0; font-size: .95rem; line-height: 1.5; color: var(--sheet-ink); }
+.cite { color: var(--sheet-dim); font-size: .9rem; }
+
+#cam { position: fixed; left: 0; top: 0; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+@media (max-width: 820px) {
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .controls { max-width: 100%; }
+  .house-panel { max-width: 60vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .beam, .marquee, .smoke i, .mist i, body.breathing .ball { animation: none !important; }
+  .ball, .spot, .gaze-mark { transition-duration: .01s !important; }
+}
+</style>
+</head>
+<body data-state="intro">
+
+<div class="venue" aria-hidden="true">
+  <div class="backdrop"></div>
+  <div class="beam l"></div>
+  <div class="beam r"></div>
+  <div class="floor"></div>
+  <div class="apron"></div>
+  <div class="footlights"></div>
+  <canvas id="motes"></canvas>
+  <div class="curtain left"></div>
+  <div class="curtain right"></div>
+  <div class="tie left"></div>
+  <div class="tie right"></div>
+  <div class="valance trim"></div>
+  <div class="valance"></div>
+  <div class="audience"></div>
+</div>
+
+<div class="show">
+  <header class="marquee">
+    <svg class="emblem" viewBox="0 0 48 48" aria-hidden="true">
+      <defs><radialGradient id="orbGrad" cx="38%" cy="32%" r="72%"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#cdb8ff"/><stop offset="1" stop-color="#3a1b6b"/></radialGradient></defs>
+      <circle cx="24" cy="20" r="16" fill="url(#orbGrad)"/>
+      <path class="swirl" d="M14 21 q5 -7 10 0 t10 0 M17 27 q4 -4 8 0"/>
+      <path class="base" d="M13 36 h22 l4 8 h-30 z"/>
+    </svg>
+    <div>
+      <h1>How Do I Know?</h1>
+      <span class="tag">An evening of mind transport</span>
+    </div>
+  </header>
+
+  <div class="patter" aria-live="polite">
+    <p class="line" id="line"></p>
+    <p class="sub" id="sub"></p>
+    <div class="timer" id="timer" hidden><i id="timerFill"></i></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="spot" id="spot"></div>
+    <div class="stand" style="left:15%"><div class="col"></div><div class="foot"></div><div class="dish"></div></div>
+    <div class="stand" style="left:50%"><div class="col"></div><div class="foot"></div><div class="dish"></div></div>
+    <div class="stand" style="left:85%"><div class="col"></div><div class="foot"></div><div class="dish"></div></div>
+    <div class="gaze-mark" id="gazeMark" hidden></div>
+    <div class="wand" id="wand" hidden></div>
+  </div>
+
+  <nav class="controls" id="controls" aria-label="Show controls"></nav>
+</div>
+
+<figure class="crystal" id="crystal" hidden>
+  <div class="orb"><div class="mist"><i></i><i></i></div><canvas id="orbCanvas" width="360" height="360"></canvas></div>
+  <div class="orb-base"></div>
+  <figcaption id="orbStatus">Searching…</figcaption>
+</figure>
+
+<div class="house-panel">
+  <div class="score" id="score">Tonight: no rounds yet</div>
+  <div class="toggles">
+    <button class="chip" id="tSound" type="button" aria-pressed="true">Sound<kbd>M</kbd></button>
+    <button class="chip" id="tFull" type="button" aria-pressed="false">Full screen<kbd>F</kbd></button>
+  </div>
+</div>
+
+<section class="backstage" id="explain" hidden role="dialog" aria-modal="true" aria-labelledby="exTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div>
+        <p class="eyebrow">Behind the curtain</p>
+        <h2 id="exTitle">Here is how I know</h2>
+      </div>
+      <button class="close" id="exClose" type="button">Back to the show (Esc)</button>
+    </div>
+    <div class="cols">
+      <div>
+        <h3>What the camera saw</h3>
+        <p id="exSummary"></p>
+        <div class="timeline" id="exTimeline" aria-label="Which ball your eyes pointed at, moment by moment"></div>
+        <div class="axis"><span>start of the look</span><span id="exDur"></span></div>
+        <div class="dwell" id="exDwell"></div>
+        <dl class="stats" id="exStats"></dl>
+      </div>
+      <div>
+        <h3>How the trick works</h3>
+        <ol class="steps">
+          <li><b>Find the face.</b> About 30 times a second, a face-tracking model from Google (MediaPipe Face Landmarker) puts 478 points on the face in the video, including the edge of each iris.</li>
+          <li><b>Measure the eyes.</b> From those points the program takes five numbers: where each iris sits between the two corners of its eye, how far the head is turned (measured two ways), and the face model's own estimate of where the eyes point.</li>
+          <li><b>Learn this person's eyes.</b> The smoke moved from ball to ball, twice to each one, and your eyes followed it. While you watched, the program recorded your five numbers for each ball. It then fitted a simple straight-line rule (a linear regression) that turns those numbers into a spot along the row of balls.</li>
+          <li><b>Count the looking time.</b> When I asked you to send me your ball, you stared at it. The program checked which ball your eyes pointed at, frame by frame, and added up the time. The ball with the most looking time was the guess. The shuffle is only showmanship.</li>
+        </ol>
+        <h3>Why the breathing and the smoke</h3>
+        <p>The program needs a calibration: a few seconds of you looking at each ball while it knows which ball that is. Telling you "look at the red ball" would give the secret away. The ritual gives you a reason to do exactly that. Breathing with closed eyes keeps your head still, and the smoke tells your eyes where to go next. Magicians call this misdirection: the story hides the method.</p>
+        <h3>Why the balls are so big</h3>
+        <p>A webcam is a rough eye tracker. Lab eye trackers shine infrared light on the eye and film it with a fast, close-up camera. A webcam sees your iris as a small patch of pixels, so its guess is often off by a few centimetres on the screen. It can tell left, middle and right apart, but it could not tell which word you are reading. That is why the balls are big and far apart, and why the smoke ritual comes first.</p>
+        <h3>Why choice researchers care</h3>
+        <p>People tend to look longer at the option they end up choosing, and looking at an option can also nudge the choice toward it. Here you looked on purpose. In research, the same measure is taken while people simply decide, and it can predict the choice before they make it. Tools such as WebGazer.js let researchers run these studies online with ordinary webcams.</p>
+        <p class="cite">Shimojo, Simion, Shimojo &amp; Scheier (2003), <i>Nature Neuroscience</i>, "Gaze bias both reflects and influences preference." Krajbich, Armel &amp; Rangel (2010), <i>Nature Neuroscience</i>, "Visual fixations and the computation and comparison of value in simple choice."</p>
+      </div>
+    </div>
+    <div class="glossary">
+      <h3>Words used here</h3>
+      <dl>
+        <div><dt>Calibration (the smoke ritual)</dt><dd>You look at known spots so the program can learn what your eyes look like when they point there. Every face is different, so this is done for each volunteer.</dd></div>
+        <div><dt>Face landmarks</dt><dd>Points a computer model places on a face in a picture, such as the corners of the eyes and the tip of the nose.</dd></div>
+        <div><dt>Iris</dt><dd>The coloured ring of the eye. Where it sits between the eye corners shows which way the eye points.</dd></div>
+        <div><dt>Dwell time</dt><dd>How long the eyes stay on one thing.</dd></div>
+        <div><dt>Linear regression</dt><dd>A way to find the straight-line rule that best turns some measured numbers (here, iris position and head turn) into an answer (here, where you looked).</dd></div>
+        <div><dt>Self-test</dt><dd>The program learned from the first trip of the smoke and was tested on the second trip, then the other way round. The score is how often it named the right ball.</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<video id="cam" playsinline muted></video>
+
+<script type="module">
+const $ = (s) => document.querySelector(s);
+
+// ---------- settings ----------
+const SLOT_FR = [0.15, 0.5, 0.85];                 // stand positions across the stage
+const BALLS = [{ id: 'red', name: 'Red' }, { id: 'blue', name: 'Blue' }, { id: 'yellow', name: 'Yellow' }];
+const BREATH = { in: 3500, out: 3500, cycles: 2 };                         // ms; eyes closed, nothing recorded
+const CAL = { firstSettle: 1500, settle: 1000, collect: 1500, order: [0, 2, 1, 2, 0, 1] };   // slots the smoke visits; first 3 = trip 1, last 3 = trip 2
+const LOOK = { ignore: 450, need: 2600, maxWall: 7000, minValid: 1000 }; // ms
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TV = '0.10.14';
+const SOURCES = {
+  local: {
+    label: 'copy saved in this folder',
+    lib: './vendor/tasks-vision/vision_bundle.mjs',
+    wasm: new URL('./vendor/tasks-vision/wasm', location.href).href,
+    model: new URL('./vendor/face_landmarker.task', location.href).href,
+  },
+  cdn: {
+    label: 'loaded online',
+    lib: `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${TV}/vision_bundle.mjs`,
+    wasm: `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${TV}/wasm`,
+    model: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+  },
+};
+
+// ---------- state ----------
+const S = {
+  state: 'intro', token: 0, mode: null,     // mode: 'camera' | 'mouse'
+  ballAt: [0, 1, 2],                        // ballAt[slot] = ball index
+  tracker: null, trackerSource: '', stream: null,
+  obs: null, model: null, selfTest: null, cal: null, look: null, result: null,
+  machine: false, frac: null, live: [0, 0, 0], mouseFrac: null,
+  score: { right: 0, total: 0 }, primary: null, wandSlot: null,
+};
+
+const video = $('#cam');
+const stage = $('#stage');
+const stands = [...stage.querySelectorAll('.stand')];
+const ballEls = BALLS.map((b) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'ball-wrap';
+  wrap.dataset.ball = b.id;
+  wrap.innerHTML = `<div class="ball"><span class="ball-name">${b.name}</span><span class="smoke"><i></i><i></i><i></i></span>` +
+    `<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" pathLength="100"/></svg></div>`;
+  stage.appendChild(wrap);
+  return wrap;
+});
+const W = (b) => `<span class="w-${BALLS[b].id}">${BALLS[b].name.toUpperCase()}</span>`;
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---------- stage geometry ----------
+function geom() {
+  const r = stage.getBoundingClientRect();
+  return { w: r.width, h: r.height, size: ballEls[0].offsetWidth, stand: stands[0].offsetHeight };
+}
+const slotCenter = (slot, g) => g.w * SLOT_FR[slot];
+function place() {
+  const h = stage.clientHeight;
+  const size = Math.max(60, Math.min(innerWidth * 0.165, h * 0.74, 340));
+  document.documentElement.style.setProperty('--ball', size + 'px');
+  const g = geom();
+  ballEls.forEach((el, b) => {
+    el.style.transform = `translateX(${slotCenter(S.ballAt.indexOf(b), g) - g.size / 2}px)`;
+  });
+  if (S.wandSlot != null) $('#wand').style.transform = wandRest(S.wandSlot, g);
+}
+addEventListener('resize', place);
+
+// ---------- patter + buttons ----------
+function say(line, sub = '') { $('#line').innerHTML = line; $('#sub').innerHTML = sub; }
+function buttons(list) {
+  const nav = $('#controls');
+  nav.replaceChildren();
+  S.primary = null;
+  for (const b of list) {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'btn' + (b.primary ? ' primary' : '');
+    el.textContent = b.label;
+    el.addEventListener('click', () => { sfx.unlock(); b.run(); });
+    nav.appendChild(el);
+    if (b.primary) S.primary = el;
+  }
+}
+
+// ---------- the show, state by state ----------
+const KEEP_REVEAL = ['reveal', 'verdict', 'after'];
+const LIGHTS_DOWN = ['calibrate', 'look', 'shuffle', 'reveal', 'verdict', 'after'];
+
+function go(state) {
+  S.state = state;
+  S.token++;
+  document.body.dataset.state = state;
+  document.body.classList.toggle('lights-down', LIGHTS_DOWN.includes(state));
+  document.body.classList.remove('breathing');
+  if (state !== 'look') sfx.drumStop();
+  sfx.breathStop();
+  if (!KEEP_REVEAL.includes(state)) {
+    $('#wand').hidden = true;
+    S.wandSlot = null;
+    ballEls.forEach((el) => el.classList.remove('chosen', 'dim'));
+    spotOn(null);
+  }
+  ballEls.forEach((el, b) => { el.classList.remove('glow', 'smoky'); ring(b, null); });
+  $('#timer').hidden = state !== 'look';
+  STATES[state](S.token);
+  refreshChrome();
+}
+
+// What the audience hears. Nothing here mentions cameras or eyes; the method stays hidden
+// until the presenter opens "Reveal the secret".
+const STATES = {
+  intro() {
+    say('Good evening. Tonight, one of you will send me a thought… and I will receive it.',
+      'I need one volunteer. Please take the seat in front of the screen, about an arm’s length away.');
+    buttons([
+      { label: 'Begin the show', primary: true, run: startCamera },
+      { label: 'Rehearse with the mouse', run: startMouse },
+    ]);
+  },
+  loading() {
+    say('Warming up the crystal ball…', 'One moment.');
+    buttons([]);
+  },
+  nocam() {
+    say('The crystal ball is dark.', S.camError);
+    buttons([
+      { label: 'Try again', primary: true, run: startCamera },
+      { label: 'Rehearse with the mouse', run: startMouse },
+    ]);
+  },
+  notracker() {
+    say('The crystal ball is dark.',
+      'The face tracker didn’t load. It needs the internet, or run the <b>start-demo</b> file in this folder so the saved copy is used. You can still rehearse with the mouse.');
+    buttons([
+      { label: 'Try again', primary: true, run: startCamera },
+      { label: 'Rehearse with the mouse', run: startMouse },
+    ]);
+  },
+  facecheck() {
+    S.model = null;
+    S.selfTest = null;
+    say('Volunteer, take your seat and face the stage. Let the crystal ball find you.', faceAdvice(S.obs));
+    buttons([{ label: 'Begin the connection', primary: true, run: () => go('calibrate') }]);
+  },
+  calibrate() {
+    S.cal = { phase: 'breathe', start: performance.now(), half: '', i: 0, valid: 0, samples: [], lost: false };
+    document.body.classList.add('breathing');
+    say('Close your eyes. Breathe in slowly…', 'Relax. Keep your head still.');
+    buttons([{ label: 'Stop', run: () => go(S.mode === 'mouse' ? 'intro' : 'facecheck') }]);
+  },
+  calibrated() {
+    const pct = S.selfTest == null ? null : Math.round(S.selfTest * 100);
+    const good = pct == null || pct >= 80;
+    const secret = S.machine && pct != null ? ` <span class="w-blue">Self-test: ${pct}%</span>` : '';
+    if (good) say('Good. Our minds are connected now.', 'Stay just as you are.' + secret);
+    else say('The connection is weak. Let’s breathe and try once more.', 'Sit still and follow the smoke closely.' + secret);
+    const trick = { label: 'Begin the trick', primary: good, run: () => go('ready') };
+    const again = { label: 'Connect again', primary: !good, run: () => go('calibrate') };
+    const warm = { label: 'Warm-up first', run: () => go('practice') };
+    buttons(good ? [trick, warm, again] : [again, warm, trick]);
+  },
+  practice() {
+    say('Warm-up. Think of any ball… the one on your mind will light up.',
+      S.mode === 'mouse' ? 'Rehearsal: point with the mouse at the ball you have in mind.' : 'Let your thoughts wander from ball to ball.');
+    buttons([
+      { label: 'Begin the trick', primary: true, run: () => go('ready') },
+      { label: 'Connect again', run: () => go('calibrate') },
+    ]);
+  },
+  ready() {
+    say('Choose one ball in your mind. Don’t say it. Don’t point.', 'Tell me when you have chosen.');
+    buttons([{ label: 'Ready', primary: true, run: () => go('look') }]);
+  },
+  look() {
+    S.look = { start: performance.now(), valid: 0, dwell: [0, 0, 0], frames: [], ballAt: [...S.ballAt], seen: 0, all: 0 };
+    say('Now stare into your ball… and send it to me.', 'Keep sending. Don’t let go of it.');
+    $('#timerFill').style.width = '0%';
+    buttons([{ label: 'Cancel', run: () => go('ready') }]);
+    sfx.drumStart();
+  },
+  lost() {
+    say('I lost your thought.', 'Sit still, face the stage, and send it to me again.');
+    buttons([
+      { label: 'Try again', primary: true, run: () => go('ready') },
+      { label: 'Connect again', run: () => go('calibrate') },
+    ]);
+  },
+  shuffle(t) {
+    say('I have received it. Now let me mix them up…', '');
+    buttons([]);
+    runShuffle(t);
+  },
+  reveal(t) {
+    say('Your ball is…', '');
+    buttons([]);
+    runReveal(t);
+  },
+  verdict() {
+    const b = S.result.ball;
+    if (S.mode === 'camera') {
+      say(`Your ball is… the ${W(b)} one!`, 'Volunteer, was I right?');
+      buttons([
+        { label: 'Yes, that’s right', primary: true, run: () => mark(true) },
+        { label: 'No, wrong ball', run: () => mark(false) },
+      ]);
+    } else {
+      say(`Your ball is… the ${W(b)} one!`, 'Rehearsal with the mouse.');
+      buttons([
+        { label: 'Play again', primary: true, run: () => go('ready') },
+        { label: 'Reveal the secret', run: openExplain },
+        { label: 'Begin the show', run: startCamera },
+      ]);
+    }
+  },
+  after() {
+    const ok = S.result.correct;
+    say(ok ? 'Thank you, thank you!' : 'Even a magician misses sometimes.',
+      ok ? 'A round of applause for our volunteer, please.' : 'The connection was weak tonight.');
+    buttons([
+      { label: 'Play again', primary: true, run: () => go('ready') },
+      { label: 'New volunteer', run: () => go('facecheck') },
+      { label: 'Reveal the secret', run: openExplain },
+    ]);
+  },
+};
+
+function mark(ok) {
+  S.result.correct = ok;
+  S.score.total++;
+  if (ok) S.score.right++;
+  $('#score').textContent = `Tonight: ${S.score.right} of ${S.score.total} right`;
+  go('after');
+}
+
+// ---------- camera + tracker ----------
+async function loadTracker() {
+  const order = location.protocol.startsWith('http') ? ['local', 'cdn'] : ['cdn'];
+  let lastErr;
+  for (const key of order) {
+    const src = SOURCES[key];
+    try {
+      const vision = await import(src.lib);
+      const fileset = await vision.FilesetResolver.forVisionTasks(src.wasm);
+      for (const delegate of ['GPU', 'CPU']) {
+        try {
+          const lm = await vision.FaceLandmarker.createFromOptions(fileset, {
+            baseOptions: { modelAssetPath: src.model, delegate },
+            runningMode: 'VIDEO', numFaces: 1,
+            outputFaceBlendshapes: true, outputFacialTransformationMatrixes: true,
+          });
+          S.trackerSource = `${src.label}, ${delegate === 'GPU' ? 'graphics chip' : 'main processor'}`;
+          return lm;
+        } catch (e) { lastErr = e; }
+      }
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+function camMessage(e) {
+  const n = e && e.name;
+  if (n === 'NotAllowedError' || n === 'SecurityError') return 'Camera access was blocked. Click the camera icon in the address bar, allow it, then try again.';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'No webcam was found. Plug one in, or rehearse with the mouse.';
+  if (n === 'NotReadableError') return 'Another app is using the webcam (Zoom, Teams…). Close it, then try again.';
+  return `The camera didn’t start (${n || 'unknown error'}).`;
+}
+
+async function startCamera() {
+  go('loading');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    S.camError = 'This browser blocks the camera for pages opened this way. Use Chrome or Edge, or run the <b>start-demo</b> file in this folder.';
+    go('nocam');
+    return;
+  }
+  const trackerP = S.tracker ? Promise.resolve(S.tracker) : loadTracker();
+  trackerP.catch(() => {});
+  try {
+    if (!S.stream) {
+      S.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false,
+      });
+      video.srcObject = S.stream;
+      await video.play();
+    }
+  } catch (e) {
+    S.stream = null;
+    S.camError = camMessage(e);
+    go('nocam');
+    return;
+  }
+  try { S.tracker = await trackerP; } catch (e) { console.error(e); go('notracker'); return; }
+  S.mode = 'camera';
+  go('facecheck');
+}
+
+function startMouse() {
+  S.mode = 'mouse';
+  S.model = null;
+  S.selfTest = null;
+  go('calibrate');
+}
+
+// ---------- from face points to five numbers ----------
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+function along(p, a, b) {               // 0 at corner a, 1 at corner b
+  const vx = b[0] - a[0], vy = b[1] - a[1];
+  return ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy);
+}
+function extract(res) {
+  const lm = res && res.faceLandmarks && res.faceLandmarks[0];
+  if (!lm || lm.length < 478) return null;
+  const vw = video.videoWidth || 1280, vh = video.videoHeight || 720;
+  const P = (i) => [lm[i].x * vw, lm[i].y * vh];
+  const a1 = P(33), a2 = P(133), b1 = P(362), b2 = P(263);        // eye corners, image left to right
+  let iA = P(468), iB = P(473);                                    // iris centres
+  const midA = [(a1[0] + a2[0]) / 2, (a1[1] + a2[1]) / 2];
+  if (dist(iA, midA) > dist(iB, midA)) [iA, iB] = [iB, iA];
+  const nose = P(1), cl = P(234), cr = P(454);
+  const faceW = dist(cl, cr);
+  const turn = (nose[0] - (cl[0] + cr[0]) / 2) / faceW;
+  let poseYaw = 0;
+  const M = res.facialTransformationMatrixes && res.facialTransformationMatrixes[0];
+  if (M && M.data && M.data.length >= 16) poseYaw = Math.atan2(M.data[8], M.data[10]);
+  let blink = false, eyeDir = 0;
+  const cats = res.faceBlendshapes && res.faceBlendshapes[0] && res.faceBlendshapes[0].categories;
+  if (cats) {
+    const g = {};
+    for (const c of cats) g[c.categoryName] = c.score;
+    blink = ((g.eyeBlinkLeft || 0) + (g.eyeBlinkRight || 0)) / 2 > 0.5;
+    eyeDir = (g.eyeLookOutLeft || 0) - (g.eyeLookInLeft || 0) + (g.eyeLookInRight || 0) - (g.eyeLookOutRight || 0);
+  }
+  const open = (dist(P(159), P(145)) / dist(a1, a2) + dist(P(386), P(374)) / dist(b1, b2)) / 2;
+  if (open < 0.09) blink = true;
+  return { f: [along(iA, a1, a2), along(iB, b1, b2), turn, poseYaw, eyeDir], blink, faceW: faceW / vw, lm, vw, vh, P };
+}
+
+// ---------- the learned rule (ridge-regularised linear regression) ----------
+function solve(A, b) {
+  const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    const d = M[c][c] || 1e-12;
+    for (let r = 0; r < n; r++) {
+      if (r === c) continue;
+      const k = M[r][c] / d;
+      for (let j = c; j <= n; j++) M[r][j] -= k * M[c][j];
+    }
+  }
+  return M.map((r, i) => r[n] / (r[i] || 1e-12));
+}
+function fitModel(samples) {
+  const n = samples.length, d = samples[0].f.length, T = [-1, 0, 1];
+  const mu = Array(d).fill(0), sd = Array(d).fill(0);
+  for (const s of samples) s.f.forEach((v, j) => { mu[j] += v / n; });
+  for (const s of samples) s.f.forEach((v, j) => { sd[j] += (v - mu[j]) ** 2 / n; });
+  for (let j = 0; j < d; j++) sd[j] = Math.sqrt(sd[j]) > 1e-9 ? Math.sqrt(sd[j]) : 1;
+  const tm = samples.reduce((a, s) => a + T[s.slot], 0) / n;
+  const A = Array.from({ length: d }, () => Array(d).fill(0)), bv = Array(d).fill(0);
+  for (const s of samples) {
+    const z = s.f.map((v, j) => (v - mu[j]) / sd[j]);
+    for (let j = 0; j < d; j++) {
+      bv[j] += z[j] * (T[s.slot] - tm);
+      for (let k = 0; k < d; k++) A[j][k] += z[j] * z[k];
+    }
+  }
+  for (let j = 0; j < d; j++) A[j][j] += 0.05 * n;
+  const m = { mu, sd, tm, w: solve(A, bv) };
+  const sum = [0, 0, 0], cnt = [0, 0, 0];
+  for (const s of samples) { sum[s.slot] += predict(m, s.f); cnt[s.slot]++; }
+  m.means = sum.map((v, i) => (cnt[i] ? v / cnt[i] : T[i]));
+  return m;
+}
+function predict(m, f) { return f.reduce((a, v, j) => a + m.w[j] * (v - m.mu[j]) / m.sd[j], m.tm); }
+function classify(m, p) {
+  let best = 0;
+  for (let i = 1; i < 3; i++) if (Math.abs(p - m.means[i]) < Math.abs(p - m.means[best])) best = i;
+  return best;
+}
+function toFrac(m, p) {                 // learned value -> position across the stage
+  const mu = m.means;
+  const inc = mu[0] < mu[1] && mu[1] < mu[2], dec = mu[0] > mu[1] && mu[1] > mu[2];
+  if (!inc && !dec) return SLOT_FR[classify(m, p)];
+  const a = inc ? mu : [...mu].reverse(), x = inc ? SLOT_FR : [...SLOT_FR].reverse();
+  const i = p < a[1] ? 0 : 1;
+  return clamp(x[i] + (p - a[i]) / (a[i + 1] - a[i]) * (x[i + 1] - x[i]), 0.02, 0.98);
+}
+function selfTest(samples) {
+  let right = 0, total = 0;
+  for (const pass of [0, 1]) {
+    const train = samples.filter((s) => s.pass !== pass), test = samples.filter((s) => s.pass === pass);
+    if (!test.length || new Set(train.map((s) => s.slot)).size < 3) continue;
+    const m = fitModel(train);
+    for (const s of test) { total++; if (classify(m, predict(m, s.f)) === s.slot) right++; }
+  }
+  return total ? right / total : null;
+}
+
+// ---------- each video frame ----------
+function observe(res) {
+  const ex = extract(res);
+  if (!ex) return { face: false, valid: false };
+  const o = { face: true, valid: !ex.blink, f: ex.f, ex };
+  if (S.model && o.valid) {
+    o.p = predict(S.model, ex.f);
+    o.slot = classify(S.model, o.p);
+    o.frac = toFrac(S.model, o.p);
+  }
+  return o;
+}
+function mouseObs() {
+  if (S.mouseFrac == null) return { face: true, valid: false };
+  let slot = 0;
+  for (let i = 1; i < 3; i++) if (Math.abs(S.mouseFrac - SLOT_FR[i]) < Math.abs(S.mouseFrac - SLOT_FR[slot])) slot = i;
+  return { face: true, valid: true, slot, frac: clamp(S.mouseFrac, 0.02, 0.98) };
+}
+addEventListener('pointermove', (e) => {
+  const r = stage.getBoundingClientRect();
+  const inside = e.clientY > r.top - 40 && e.clientY < r.bottom + 20;
+  S.mouseFrac = inside ? (e.clientX - r.left) / r.width : null;
+});
+document.addEventListener('pointerleave', () => { S.mouseFrac = null; });
+
+let lastTick = 0, lastFrame = 0, lastVideoTime = -1;
+function tick(now) {
+  requestAnimationFrame(tick);
+  const dt = Math.min(100, now - (lastTick || now));
+  lastTick = now;
+  if (S.mode === 'camera' && S.tracker && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    let res = null;
+    try { res = S.tracker.detectForVideo(video, now); } catch (e) { console.warn(e); }
+    const fdt = Math.min(120, now - (lastFrame || now));
+    lastFrame = now;
+    const o = observe(res);
+    drawOrb(o);
+    handle(o, fdt, now);
+  } else if (S.mode === 'mouse') {
+    handle(mouseObs(), dt, now);
+  }
+}
+requestAnimationFrame(tick);
+
+function handle(o, dt, now) {
+  S.obs = o;
+  orbStatus(o);
+  updateLive(o);
+  if (S.state === 'facecheck') {
+    const advice = faceAdvice(o);
+    if ($('#sub').textContent !== advice) $('#sub').textContent = advice;
+  } else if (S.state === 'calibrate') calStep(o, dt, now);
+  else if (S.state === 'look') lookStep(o, dt, now);
+}
+
+function faceAdvice(o) {
+  if (!o || !o.face) return 'The crystal ball can’t find you yet. Sit up and face the screen.';
+  if (o.ex && o.ex.faceW < 0.13) return 'Come a little closer to the screen.';
+  if (o.ex && o.ex.faceW > 0.5) return 'A little too close. Lean back a bit.';
+  return 'The crystal ball has found you. Stay just like that.';
+}
+
+// ---------- the ritual: breathing, then smoke that travels from ball to ball ----------
+// Hidden purpose: a controlled calibration. The smoke tells the eyes where to look,
+// and each ball is visited twice so the program can test itself.
+const CAL_LINES = [
+  (b) => `Open your eyes. Look into the ${W(b)} ball. Can you see the smoke inside?`,
+  (b) => `The smoke drifts into the ${W(b)} ball. Follow it.`,
+  (b) => `…and now into the ${W(b)} ball.`,
+  (b) => `Once more. It floats back to the ${W(b)} ball.`,
+  (b) => `…over to the ${W(b)} ball.`,
+  (b) => `…and settles in the ${W(b)} ball. Keep watching.`,
+];
+function calAnnounce() {
+  const c = S.cal, b = S.ballAt[CAL.order[c.i]];
+  say(CAL_LINES[c.i](b), 'Breathe slowly. Watch the smoke.');
+  ballEls.forEach((el, i) => {
+    el.classList.toggle('smoky', i === b);
+    el.classList.toggle('glow', i === b);
+    el.classList.toggle('dim', i !== b);
+    ring(i, S.machine && i === b ? 0 : null, 'cal');
+  });
+}
+function breathStep(c, now) {
+  const el = now - c.start, cycle = BREATH.in + BREATH.out;
+  if (el >= BREATH.cycles * cycle) {
+    document.body.classList.remove('breathing');
+    c.phase = 'smoke';
+    c.start = now;
+    sfx.chime();
+    calAnnounce();
+    return;
+  }
+  const half = el % cycle < BREATH.in ? 'in' : 'out';
+  const key = half + Math.floor(el / cycle);
+  if (key === c.half) return;
+  c.half = key;
+  if (half === 'in') say(el < cycle ? 'Close your eyes. Breathe in slowly…' : 'Breathe in again… slowly…', 'Relax. Keep your head still.');
+  else say('…and breathe out.', 'Relax. Keep your head still.');
+  sfx.breath(half, (half === 'in' ? BREATH.in : BREATH.out) / 1000);
+}
+function calStep(o, dt, now) {
+  const c = S.cal;
+  if (c.phase === 'breathe') { breathStep(c, now); return; }
+  const slot = CAL.order[c.i];
+  if (now - c.start < (c.i === 0 ? CAL.firstSettle : CAL.settle)) return;
+  if (S.mode === 'mouse') o = { face: true, valid: true, f: null };   // rehearsal: the ritual just runs on time
+  if (!o.face) {
+    if (!c.lost) { c.lost = true; $('#sub').textContent = 'I’ve lost you. Face the stage; I’ll wait.'; }
+    return;
+  }
+  if (c.lost) { c.lost = false; calAnnounce(); }
+  if (!o.valid) return;
+  c.valid += dt;
+  if (o.f) c.samples.push({ f: o.f, slot, pass: c.i < 3 ? 0 : 1 });
+  if (S.machine) ring(S.ballAt[slot], c.valid / CAL.collect, 'cal');
+  if (c.valid >= CAL.collect) {
+    sfx.chime();
+    c.i++;
+    c.valid = 0;
+    c.start = now;
+    if (c.i < CAL.order.length) { calAnnounce(); return; }
+    if (S.mode === 'camera') {
+      S.model = fitModel(c.samples);
+      S.selfTest = selfTest(c.samples);
+    }
+    go('calibrated');
+  }
+}
+
+// ---------- the look ----------
+function lookStep(o, dt, now) {
+  const L = S.look, elapsed = now - L.start;
+  if (elapsed >= LOOK.ignore) {
+    L.all++;
+    if (o.valid && o.slot != null) {
+      L.seen++;
+      L.dwell[o.slot] += dt;
+      L.valid += dt;
+      L.frames.push({ dt, ball: L.ballAt[o.slot] });
+    } else {
+      L.frames.push({ dt, ball: null });
+    }
+  }
+  $('#timerFill').style.width = `${clamp(L.valid / LOOK.need, 0, 1) * 100}%`;
+  if (L.valid >= LOOK.need || elapsed >= LOOK.maxWall) {
+    if (L.valid < LOOK.minValid) { go('lost'); return; }
+    let slot = 0;
+    for (let i = 1; i < 3; i++) if (L.dwell[i] > L.dwell[slot]) slot = i;
+    const byBall = [0, 0, 0];
+    L.dwell.forEach((v, s) => { byBall[L.ballAt[s]] += v; });
+    S.result = { ball: L.ballAt[slot], byBall, frames: L.frames, seen: L.seen, all: L.all, mode: S.mode, correct: null };
+    go('shuffle');
+  }
+}
+
+// ---------- live feedback ----------
+function ring(b, v, kind) {
+  const svg = ballEls[b].querySelector('.ring');
+  svg.style.opacity = v == null ? 0 : 1;
+  svg.classList.toggle('live', kind === 'live');
+  svg.querySelector('circle').style.strokeDashoffset = 100 - 100 * clamp(v || 0, 0, 1);
+}
+function updateLive(o) {
+  const slot = o.valid && o.slot != null ? o.slot : null;
+  for (let k = 0; k < 3; k++) S.live[k] += ((k === slot ? 1 : 0) - S.live[k]) * 0.22;
+  if (slot != null) S.frac = S.frac == null ? o.frac : S.frac + (o.frac - S.frac) * 0.35;
+  else if (!o.face) S.frac = null;
+
+  const st = S.state;
+  const hasGaze = S.frac != null && (S.mode === 'mouse' || S.model);
+  const showMark = hasGaze && S.machine && ['calibrated', 'practice', 'ready', 'look'].includes(st);
+  const mark = $('#gazeMark');
+  mark.hidden = !showMark;
+  if (showMark) mark.style.left = `${S.frac * 100}%`;
+
+  if (st === 'practice') {
+    let best = 0;
+    for (let k = 1; k < 3; k++) if (S.live[k] > S.live[best]) best = k;
+    ballEls.forEach((el, b) => el.classList.toggle('glow', S.live[best] > 0.5 && S.ballAt[best] === b));
+  }
+  if (S.machine && ['practice', 'calibrated', 'ready', 'look'].includes(st)) {
+    for (let k = 0; k < 3; k++) ring(S.ballAt[k], S.live[k], 'live');
+  }
+}
+
+// ---------- crystal ball: mist for the audience, camera view with eye points in secret view ----------
+const orb = $('#orbCanvas'), octx = orb.getContext('2d');
+const EYE_A = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246];
+const EYE_B = [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398];
+let crop = null;
+function drawOrb(o) {
+  if ($('#crystal').hidden || !S.machine || !video.videoWidth) return;
+  const Wc = orb.width, Hc = orb.height, vw = video.videoWidth, vh = video.videoHeight;
+  let target = { x: vw / 2, y: vh / 2, s: Math.min(vw, vh) };
+  if (o.face) {
+    const P = o.ex.P, cl = P(234), cr = P(454), nose = P(1);
+    target = { x: (cl[0] + cr[0]) / 2, y: nose[1] - dist(cl, cr) * 0.12, s: Math.min(vw, vh, dist(cl, cr) * 1.9) };
+  }
+  crop = crop ? { x: crop.x + (target.x - crop.x) * 0.2, y: crop.y + (target.y - crop.y) * 0.2, s: crop.s + (target.s - crop.s) * 0.2 } : target;
+  const s = crop.s, sx = clamp(crop.x - s / 2, 0, vw - s), sy = clamp(crop.y - s / 2, 0, vh - s);
+  octx.save();
+  octx.translate(Wc, 0);
+  octx.scale(-1, 1);                       // mirror, like looking in a mirror
+  octx.drawImage(video, sx, sy, s, s, 0, 0, Wc, Hc);
+  if (o.face) {
+    const P = o.ex.P, map = (p) => [(p[0] - sx) / s * Wc, (p[1] - sy) / s * Hc];
+    octx.fillStyle = 'rgba(111,242,223,.9)';
+    for (const i of [...EYE_A, ...EYE_B]) { const [x, y] = map(P(i)); octx.fillRect(x - 1.5, y - 1.5, 3, 3); }
+    octx.strokeStyle = 'rgba(111,242,223,1)';
+    octx.lineWidth = 2;
+    for (const [c, e] of [[468, 469], [473, 474]]) {
+      const [x, y] = map(P(c)), r = dist(P(c), P(e)) / s * Wc;
+      octx.beginPath(); octx.arc(x, y, Math.max(3, r), 0, Math.PI * 2); octx.stroke();
+      octx.beginPath(); octx.arc(x, y, 2, 0, Math.PI * 2); octx.fill();
+    }
+  }
+  octx.restore();
+}
+let lastStatus = '';
+function orbStatus(o) {
+  if (S.mode !== 'camera') return;
+  $('#crystal').classList.toggle('connected', !!o.face);
+  const txt = S.machine ? (!o.face ? 'No face found' : o.valid ? 'Eyes found' : 'Blink…') : (o.face ? 'Connected' : 'Searching…');
+  if (txt === lastStatus) return;
+  lastStatus = txt;
+  const el = $('#orbStatus');
+  el.textContent = txt;
+  el.classList.toggle('bad', !o.face);
+}
+
+function refreshChrome() {
+  const crystal = $('#crystal');
+  crystal.hidden = !(S.mode === 'camera' && S.stream && (S.machine || ['facecheck', 'calibrated', 'lost'].includes(S.state)));
+  crystal.classList.toggle('secret', S.machine);
+  lastStatus = '';
+  $('#tSound').setAttribute('aria-pressed', String(sfx.on));
+  if (!S.machine) {
+    ballEls.forEach((_, b) => ring(b, null));
+    $('#gazeMark').hidden = true;
+  }
+}
+
+// ---------- shuffle + reveal ----------
+function spotOn(target) {
+  const spot = $('#spot');
+  if (target === 'row' || target == null) { spot.style.left = '50%'; spot.style.width = '100%'; return; }
+  const g = geom();
+  spot.style.left = `${slotCenter(target, g)}px`;
+  spot.style.width = `${g.size * 2.4}px`;
+}
+async function swap(a, b, dur, g) {
+  const ba = S.ballAt[a], bb = S.ballAt[b], ea = ballEls[ba], eb = ballEls[bb];
+  const xa = slotCenter(a, g) - g.size / 2, xb = slotCenter(b, g) - g.size / 2;
+  const N = 18, kA = [], kB = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2, s = Math.sin(Math.PI * t);
+    kA.push({ transform: `translateX(${xa + (xb - xa) * e}px) translateY(${-s * g.size * 0.32}px) scale(${1 - 0.14 * s})` });
+    kB.push({ transform: `translateX(${xb + (xa - xb) * e}px) translateY(${s * g.size * 0.05}px) scale(${1 + 0.08 * s})` });
+  }
+  ea.style.zIndex = 2; eb.style.zIndex = 3;
+  ea.style.transform = `translateX(${xb}px)`;
+  eb.style.transform = `translateX(${xa}px)`;
+  S.ballAt[a] = bb; S.ballAt[b] = ba;
+  await Promise.all([ea.animate(kA, { duration: dur }).finished, eb.animate(kB, { duration: dur }).finished]).catch(() => {});
+  ea.style.zIndex = ''; eb.style.zIndex = '';
+}
+async function runShuffle(t) {
+  await delay(600);
+  const n = REDUCED ? 3 : 7;
+  let prev = '';
+  for (let i = 0; i < n; i++) {
+    if (t !== S.token) return;
+    let a, b;
+    do { a = Math.floor(Math.random() * 3); b = Math.floor(Math.random() * 3); } while (a === b || [a, b].sort().join() === prev);
+    prev = [a, b].sort().join();
+    sfx.whoosh();
+    await swap(a, b, REDUCED ? 200 : Math.max(300, 560 - i * 40), geom());
+  }
+  await delay(350);
+  if (t === S.token) go('reveal');
+}
+function wandPose(slot, g, rot, dx, dy) {
+  const top = g.h - g.stand * 0.84 - g.size;
+  const x = slotCenter(slot, g) + g.size * 0.33 + dx, y = top + g.size * 0.1 + dy;
+  return `translate(${x}px, ${y}px) translate(-50%, -100%) rotate(${rot}deg)`;
+}
+const wandRest = (slot, g) => wandPose(slot, g, 60, g.size * 0.23, g.size * 0.18);
+function sparkle(x, y, size) {
+  for (let i = 0; i < 20; i++) {
+    const s = document.createElement('i');
+    s.className = 'spark';
+    s.style.left = `${x}px`;
+    s.style.top = `${y}px`;
+    stage.appendChild(s);
+    const ang = Math.random() * Math.PI * 2, d = size * (0.25 + Math.random() * 0.5);
+    s.animate([
+      { transform: 'translate(-50%, -50%) scale(1.2)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${Math.cos(ang) * d}px), calc(-50% + ${Math.sin(ang) * d}px)) scale(.2)`, opacity: 0 },
+    ], { duration: 700 + Math.random() * 600, easing: 'cubic-bezier(.2,.7,.3,1)' }).finished.then(() => s.remove(), () => s.remove());
+  }
+}
+async function runReveal(t) {
+  const b = S.result.ball, slot = S.ballAt.indexOf(b), g = geom(), wand = $('#wand');
+  await delay(500);
+  if (t !== S.token) return;
+  wand.hidden = false;
+  const dur = REDUCED ? 400 : 1500;
+  const offX = g.w - slotCenter(slot, g) + g.size, offY = -g.size * 1.2;
+  const anim = wand.animate([
+    { transform: wandPose(slot, g, 60, offX, offY), opacity: 0 },
+    { transform: wandPose(slot, g, 34, 0, 0), opacity: 1, offset: 0.6 },
+    { transform: wandPose(slot, g, 26, -g.size * 0.05, g.size * 0.08), offset: 0.76 },
+    { transform: wandRest(slot, g), offset: 1 },
+  ], { duration: dur, easing: 'ease-in-out' });
+  wand.style.transform = wandRest(slot, g);
+  S.wandSlot = slot;
+  await delay(dur * 0.76);
+  if (t !== S.token) return;
+  const top = g.h - g.stand * 0.84 - g.size;
+  sparkle(slotCenter(slot, g) + g.size * 0.26, top + g.size * 0.18, g.size);
+  sfx.tada();
+  ballEls.forEach((el, i) => { el.classList.toggle('chosen', i === b); el.classList.toggle('dim', i !== b); });
+  spotOn(slot);
+  await anim.finished.catch(() => {});
+  await delay(500);
+  if (t === S.token) go('verdict');
+}
+
+// ---------- behind the curtain ----------
+function openExplain() {
+  const R = S.result;
+  if (!R) return;
+  const total = R.frames.reduce((a, f) => a + f.dt, 0);
+  const secs = (ms) => (ms / 1000).toFixed(1);
+  const order = [0, 1, 2].sort((a, b) => R.byBall[b] - R.byBall[a]);
+  const parts = order.map((b) => `${W(b)} for ${secs(R.byBall[b])} s`);
+  const who = R.mode === 'camera' ? 'your eyes' : 'the mouse (standing in for eyes)';
+  $('#exSummary').innerHTML =
+    `During the look, the program checked ${R.mode === 'camera' ? 'your eyes' : 'the mouse'} ${R.all} times. ` +
+    `It found ${who} pointing at ${parts[0]}, ${parts[1]} and ${parts[2]}. ` +
+    `${W(R.ball)} had the most looking time, so that was my pick.`;
+
+  const tl = $('#exTimeline');
+  tl.replaceChildren();
+  let cur = null;
+  for (const f of R.frames) {
+    if (!cur || cur.ball !== f.ball) { cur = { ball: f.ball, dt: 0 }; cur.el = document.createElement('span'); tl.appendChild(cur.el); cur.el.className = 't-' + (f.ball == null ? 'none' : BALLS[f.ball].id); }
+    cur.dt += f.dt;
+    cur.el.style.flex = `${cur.dt} 0 0px`;
+  }
+  $('#exDur').textContent = `${secs(total)} s later`;
+
+  const dw = $('#exDwell');
+  dw.replaceChildren();
+  const max = Math.max(...R.byBall, 1);
+  for (const b of [0, 1, 2]) {
+    const win = b === R.ball;
+    dw.insertAdjacentHTML('beforeend',
+      `<span class="name w-${BALLS[b].id}">${BALLS[b].name}</span>` +
+      `<span class="track"><span class="fill" style="width:${(R.byBall[b] / max) * 100}%;background:var(--${BALLS[b].id})"></span></span>` +
+      `<span class="secs${win ? ' win' : ''}">${secs(R.byBall[b])} s</span>`);
+  }
+
+  const st = $('#exStats');
+  const rows = [];
+  if (R.mode === 'camera') {
+    rows.push(['Calibration self-test', S.selfTest == null ? 'not available' : `${Math.round(S.selfTest * 100)}% of readings named the right ball`]);
+    rows.push(['Frames used', `${R.seen} of ${R.all} (the rest were blinks or moments with no face)`]);
+    rows.push(['Face tracker', `MediaPipe Face Landmarker, ${S.trackerSource}`]);
+    rows.push(['Tonight', S.score.total ? `${S.score.right} of ${S.score.total} picks right` : 'no rounds scored yet']);
+  } else {
+    rows.push(['Mode', 'Rehearsal: the mouse pointer stood in for the eyes']);
+  }
+  st.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('#explain').hidden = false;
+  $('#exClose').focus();
+}
+function closeExplain() { $('#explain').hidden = true; if (S.primary) S.primary.focus(); }
+$('#exClose').addEventListener('click', closeExplain);
+$('#explain').addEventListener('click', (e) => { if (e.target.id === 'explain') closeExplain(); });
+
+// ---------- presenter toggles ----------
+function toggleMachine() { S.machine = !S.machine; refreshChrome(); }
+function toggleSound() { sfx.on = !sfx.on; if (!sfx.on) sfx.drumStop(); refreshChrome(); }
+function toggleFull() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+  else document.exitFullscreen?.().catch(() => {});
+}
+$('#tSound').addEventListener('click', () => { sfx.unlock(); toggleSound(); });
+$('#tFull').addEventListener('click', toggleFull);
+document.addEventListener('fullscreenchange', () => {
+  $('#tFull').setAttribute('aria-pressed', String(!!document.fullscreenElement));
+  requestAnimationFrame(place);
+});
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (!$('#explain').hidden) { if (e.key === 'Escape') closeExplain(); return; }
+  const k = e.key.toLowerCase();
+  if ((k === ' ' || k === 'enter') && !(e.target instanceof HTMLButtonElement)) {
+    if (S.primary) { e.preventDefault(); S.primary.click(); }
+  } else if (k === 'v') toggleMachine();
+  else if (k === 'm') { sfx.unlock(); toggleSound(); }
+  else if (k === 'f') toggleFull();
+});
+
+// ---------- sound (made in the browser, no files) ----------
+const sfx = {
+  ctx: null, on: true, master: null, roll: null, nb: null, breathNode: null,
+  unlock() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.9;
+      this.master.connect(this.ctx.destination);
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  ok() { return this.on && this.ctx && this.ctx.state === 'running'; },
+  noise() {
+    if (!this.nb) {
+      const n = this.ctx.sampleRate * 2, b = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      this.nb = b;
+    }
+    return this.nb;
+  },
+  tone(f, at, dur, type = 'triangle', vol = 0.1) {
+    const c = this.ctx, o = c.createOscillator(), g = c.createGain(), t = c.currentTime + at;
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(this.master);
+    o.start(t); o.stop(t + dur + 0.05);
+  },
+  burst(at, dur, type, freq, vol) {
+    const c = this.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime + at;
+    s.buffer = this.noise(); f.type = type; f.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f).connect(g).connect(this.master);
+    s.start(t); s.stop(t + dur + 0.05);
+    return f;
+  },
+  breath(half, secs) {
+    if (!this.ok()) return;
+    this.breathStop();
+    const c = this.ctx, t = c.currentTime, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = this.noise(); s.loop = true;
+    f.type = 'lowpass'; f.Q.value = 0.8;
+    f.frequency.setValueAtTime(half === 'in' ? 300 : 900, t);
+    f.frequency.exponentialRampToValueAtTime(half === 'in' ? 900 : 300, t + secs);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.07, t + secs * 0.45);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + secs);
+    s.connect(f).connect(g).connect(this.master);
+    s.start(t); s.stop(t + secs + 0.05);
+    this.breathNode = s;
+  },
+  breathStop() {
+    if (!this.breathNode) return;
+    try { this.breathNode.stop(); } catch (e) { /* already stopped */ }
+    this.breathNode = null;
+  },
+  chime() { if (!this.ok()) return; this.tone(1318.5, 0, 0.35, 'sine', 0.08); this.tone(1975.5, 0.07, 0.45, 'sine', 0.06); },
+  whoosh() {
+    if (!this.ok()) return;
+    const f = this.burst(0, 0.35, 'bandpass', 500, 0.14), t = this.ctx.currentTime;
+    f.Q.value = 1.2;
+    f.frequency.exponentialRampToValueAtTime(2600, t + 0.28);
+  },
+  tada() {
+    if (!this.ok()) return;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, i * 0.06, 1.2, 'triangle', 0.08));
+    this.burst(0, 1.1, 'highpass', 6000, 0.12);
+  },
+  drumStart() {
+    if (!this.ok() || this.roll) return;
+    const c = this.ctx, t = c.currentTime;
+    const s = c.createBufferSource(), bp = c.createBiquadFilter(), am = c.createGain(), lfo = c.createOscillator(), depth = c.createGain(), vol = c.createGain();
+    s.buffer = this.noise(); s.loop = true;
+    bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.7;
+    am.gain.value = 0.5; lfo.type = 'square'; lfo.frequency.value = 17; depth.gain.value = 0.5;
+    lfo.connect(depth).connect(am.gain);
+    vol.gain.setValueAtTime(0.0001, t);
+    vol.gain.exponentialRampToValueAtTime(0.04, t + 0.3);
+    vol.gain.linearRampToValueAtTime(0.15, t + 3.5);
+    s.connect(bp).connect(am).connect(vol).connect(this.master);
+    s.start(t); lfo.start(t);
+    this.roll = { s, lfo, vol };
+  },
+  drumStop() {
+    if (!this.roll) return;
+    const { s, lfo, vol } = this.roll, t = this.ctx.currentTime;
+    vol.gain.cancelScheduledValues(t);
+    vol.gain.setValueAtTime(Math.max(vol.gain.value, 0.0001), t);
+    vol.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    s.stop(t + 0.3); lfo.stop(t + 0.3);
+    this.roll = null;
+  },
+};
+
+// ---------- floating dust in the spotlights ----------
+function startMotes() {
+  const c = $('#motes');
+  if (REDUCED) return;
+  const ctx = c.getContext('2d'), P = [];
+  let w = 0, h = 0;
+  const size = () => {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    w = innerWidth; h = innerHeight;
+    c.width = w * dpr; c.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  size();
+  addEventListener('resize', size);
+  for (let i = 0; i < 70; i++) P.push({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 1.8, v: 0.00004 + Math.random() * 0.00012, ph: Math.random() * 6.28 });
+  const draw = (t) => {
+    ctx.clearRect(0, 0, w, h);
+    for (const p of P) {
+      p.y -= p.v * 16;
+      if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); }
+      const a = 0.22 + 0.22 * Math.sin(t * 0.002 + p.ph * 3);
+      ctx.fillStyle = `rgba(255, 228, 170, ${a})`;
+      ctx.beginPath();
+      ctx.arc((p.x + Math.sin(t * 0.0004 + p.ph) * 0.01) * w, p.y * h, p.r, 0, 6.283);
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+}
+
+// ---------- start ----------
+place();
+startMotes();
+go('intro');
+document.fonts && document.fonts.ready.then(place);
+window.oculus = { S, fitModel, predict, classify, selfTest, go };   // for poking at in the browser console
+</script>
+</body>
+</html>
