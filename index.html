@@ -179,8 +179,11 @@ body.lights-down .venue::after { opacity: 1; }
 .patter .sub b { color: var(--ink); }
 .w-red { color: var(--red-word); } .w-blue { color: var(--blue-word); } .w-yellow { color: var(--yellow-word); }
 .w-red, .w-blue, .w-yellow { letter-spacing: .06em; }
-.timer { width: min(24rem, 60vw); height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; margin: .3em auto 0; }
-.timer i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--brass-deep), var(--brass-hi)); }
+/* While eye data is being collected the stage has no words: eyes jump to anything readable. */
+.patter, .controls, .house-panel { transition: opacity .6s ease; }
+.marquee { transition: opacity .8s ease; }
+body.clean .patter, body.clean .controls, body.clean .house-panel, body.quiet .patter { opacity: 0; pointer-events: none; }
+body.clean .marquee { opacity: .08; }
 
 .stage { position: relative; justify-self: stretch; width: 100%; height: 100%; }
 .spot {
@@ -445,7 +448,6 @@ body.breathing .ball { animation: breathe 7s ease-in-out infinite; }
   <div class="patter" aria-live="polite">
     <p class="line" id="line"></p>
     <p class="sub" id="sub"></p>
-    <div class="timer" id="timer" hidden><i id="timerFill"></i></div>
   </div>
 
   <div class="stage" id="stage">
@@ -469,6 +471,7 @@ body.breathing .ball { animation: breathe 7s ease-in-out infinite; }
 <div class="house-panel">
   <div class="score" id="score">Tonight: no rounds yet</div>
   <div class="toggles">
+    <button class="chip" id="tVoice" type="button" aria-pressed="true">Voice<kbd>T</kbd></button>
     <button class="chip" id="tSound" type="button" aria-pressed="true">Sound<kbd>M</kbd></button>
     <button class="chip" id="tFull" type="button" aria-pressed="false">Full screen<kbd>F</kbd></button>
   </div>
@@ -501,7 +504,7 @@ body.breathing .ball { animation: breathe 7s ease-in-out infinite; }
           <li><b>Count the looking time.</b> When I asked you to send me your ball, you stared at it. The program checked which ball your eyes pointed at, frame by frame, and added up the time. The ball with the most looking time was the guess. The shuffle is only showmanship.</li>
         </ol>
         <h3>Why the breathing and the smoke</h3>
-        <p>The program needs a calibration: a few seconds of you looking at each ball while it knows which ball that is. Telling you "look at the red ball" would give the secret away. The ritual gives you a reason to do exactly that. Breathing with closed eyes keeps your head still, and the smoke tells your eyes where to go next. Magicians call this misdirection: the story hides the method.</p>
+        <p>The program needs a calibration: a few seconds of you looking at each ball while it knows which ball that is. Telling you "look at the red ball" would give the secret away. The ritual gives you a reason to do exactly that. Breathing with closed eyes keeps your head still, and the smoke tells your eyes where to go next. Magicians call this misdirection: the story hides the method. While the program records, the screen also shows no words and the magician speaks instead, because eyes jump to any text they can read.</p>
         <h3>Why the balls are so big</h3>
         <p>A webcam is a rough eye tracker. Lab eye trackers shine infrared light on the eye and film it with a fast, close-up camera. A webcam sees your iris as a small patch of pixels, so its guess is often off by a few centimetres on the screen. It can tell left, middle and right apart, but it could not tell which word you are reading. That is why the balls are big and far apart, and why the smoke ritual comes first.</p>
         <h3>Why choice researchers care</h3>
@@ -532,8 +535,8 @@ const $ = (s) => document.querySelector(s);
 const SLOT_FR = [0.15, 0.5, 0.85];                 // stand positions across the stage
 const BALLS = [{ id: 'red', name: 'Red' }, { id: 'blue', name: 'Blue' }, { id: 'yellow', name: 'Yellow' }];
 const BREATH = { in: 3500, out: 3500, cycles: 2 };                         // ms; eyes closed, nothing recorded
-const CAL = { firstSettle: 1500, settle: 1000, collect: 1500, order: [0, 2, 1, 2, 0, 1] };   // slots the smoke visits; first 3 = trip 1, last 3 = trip 2
-const LOOK = { ignore: 450, need: 2600, maxWall: 7000, minValid: 1000 }; // ms
+const CAL = { firstSettle: 2000, settle: 1000, collect: 1500, order: [0, 2, 1, 2, 0, 1] };   // slots the smoke visits; first 3 = trip 1, last 3 = trip 2
+const LOOK = { ignore: 900, need: 2600, maxWall: 7000, minValid: 1000 }; // ms
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const TV = '0.10.14';
 const SOURCES = {
@@ -596,7 +599,11 @@ function place() {
 addEventListener('resize', place);
 
 // ---------- patter + buttons ----------
-function say(line, sub = '') { $('#line').innerHTML = line; $('#sub').innerHTML = sub; }
+function say(line, sub = '', spoken = '') {
+  $('#line').innerHTML = line;
+  $('#sub').innerHTML = sub;
+  if (spoken) voice.say(spoken);
+}
 function buttons(list) {
   const nav = $('#controls');
   nav.replaceChildren();
@@ -615,13 +622,18 @@ function buttons(list) {
 // ---------- the show, state by state ----------
 const KEEP_REVEAL = ['reveal', 'verdict', 'after'];
 const LIGHTS_DOWN = ['calibrate', 'look', 'shuffle', 'reveal', 'verdict', 'after'];
+const CLEAN = ['calibrate', 'look'];          // eye data is collected here: no words on screen
 
 function go(state) {
   S.state = state;
   S.token++;
   document.body.dataset.state = state;
   document.body.classList.toggle('lights-down', LIGHTS_DOWN.includes(state));
-  document.body.classList.remove('breathing');
+  document.body.classList.toggle('clean', CLEAN.includes(state));
+  document.body.classList.remove('breathing', 'quiet');
+  clearTimeout(S.quietTimer);
+  S.escape = null;
+  voice.stop();
   if (state !== 'look') sfx.drumStop();
   sfx.breathStop();
   if (!KEEP_REVEAL.includes(state)) {
@@ -631,13 +643,14 @@ function go(state) {
     spotOn(null);
   }
   ballEls.forEach((el, b) => { el.classList.remove('glow', 'smoky'); ring(b, null); });
-  $('#timer').hidden = state !== 'look';
   STATES[state](S.token);
   refreshChrome();
 }
 
-// What the audience hears. Nothing here mentions cameras or eyes; the method stays hidden
-// until the presenter opens "Reveal the secret".
+// What the audience sees and hears. Nothing mentions cameras or eyes; the method stays hidden
+// until the presenter opens "Reveal the secret". Each set of directions gets its own screen
+// first; then, while eye data is collected (the ritual and the look), the screen goes wordless
+// and the magician only speaks. Escape stops either of those two steps.
 const STATES = {
   intro() {
     say('Good evening. Tonight, one of you will send me a thought… and I will receive it.',
@@ -648,7 +661,7 @@ const STATES = {
     ]);
   },
   loading() {
-    say('Warming up the crystal ball…', 'One moment.');
+    say('Warming up the crystal ball…');
     buttons([]);
   },
   nocam() {
@@ -669,72 +682,87 @@ const STATES = {
   facecheck() {
     S.model = null;
     S.selfTest = null;
-    say('Volunteer, take your seat and face the stage. Let the crystal ball find you.', faceAdvice(S.obs));
-    buttons([{ label: 'Begin the connection', primary: true, run: () => go('calibrate') }]);
+    say('Volunteer, take your seat and face the stage.', faceAdvice(S.obs),
+      'Volunteer, please take your seat, and face the stage. Let the crystal ball find you.');
+    buttons([{ label: 'Begin the connection', primary: true, run: () => go('prelude') }]);
+  },
+  prelude() {
+    say('Close your eyes and breathe with me.',
+      'At the chime, open your eyes and find the smoke. Follow it wherever it goes.',
+      'Close your eyes, and breathe with me. At the chime, open your eyes, and find the smoke. Follow it, wherever it goes.');
+    buttons([
+      { label: 'I’m ready', primary: true, run: () => go('calibrate') },
+      { label: 'Back', run: () => go(S.mode === 'mouse' ? 'intro' : 'facecheck') },
+    ]);
   },
   calibrate() {
     S.cal = { phase: 'breathe', start: performance.now(), half: '', i: 0, valid: 0, samples: [], lost: false };
+    S.escape = () => go('prelude');
     document.body.classList.add('breathing');
-    say('Close your eyes. Breathe in slowly…', 'Relax. Keep your head still.');
-    buttons([{ label: 'Stop', run: () => go(S.mode === 'mouse' ? 'intro' : 'facecheck') }]);
+    buttons([]);
   },
   calibrated() {
     const pct = S.selfTest == null ? null : Math.round(S.selfTest * 100);
     const good = pct == null || pct >= 80;
     const secret = S.machine && pct != null ? ` <span class="w-blue">Self-test: ${pct}%</span>` : '';
-    if (good) say('Good. Our minds are connected now.', 'Stay just as you are.' + secret);
-    else say('The connection is weak. Let’s breathe and try once more.', 'Sit still and follow the smoke closely.' + secret);
+    if (good) say('Our minds are connected.', secret, 'Good. Our minds are connected now.');
+    else say('The connection is weak.', 'Let’s breathe and try once more.' + secret, 'The connection is weak. Let’s breathe, and try once more.');
     const trick = { label: 'Begin the trick', primary: good, run: () => go('ready') };
-    const again = { label: 'Connect again', primary: !good, run: () => go('calibrate') };
+    const again = { label: 'Connect again', primary: !good, run: () => go('prelude') };
     const warm = { label: 'Warm-up first', run: () => go('practice') };
     buttons(good ? [trick, warm, again] : [again, warm, trick]);
   },
   practice() {
-    say('Warm-up. Think of any ball… the one on your mind will light up.',
-      S.mode === 'mouse' ? 'Rehearsal: point with the mouse at the ball you have in mind.' : 'Let your thoughts wander from ball to ball.');
+    say('Think of any ball… the one on your mind will light up.',
+      S.mode === 'mouse' ? 'Rehearsal: point at the ball you have in mind.' : '',
+      'Think of any ball. The one on your mind will light up.');
     buttons([
       { label: 'Begin the trick', primary: true, run: () => go('ready') },
-      { label: 'Connect again', run: () => go('calibrate') },
+      { label: 'Connect again', run: () => go('prelude') },
     ]);
+    S.quietTimer = setTimeout(() => document.body.classList.add('quiet'), 4000);
   },
   ready() {
-    say('Choose one ball in your mind. Don’t say it. Don’t point.', 'Tell me when you have chosen.');
+    say('Choose one ball in your mind. Don’t say it. Don’t point.',
+      'When the lights go down, stare into your ball and send it to me until the drums stop.',
+      'Choose one ball in your mind. Don’t say it. Don’t point. When the lights go down, stare into your ball, and send it to me, until the drums stop.');
     buttons([{ label: 'Ready', primary: true, run: () => go('look') }]);
   },
   look() {
     S.look = { start: performance.now(), valid: 0, dwell: [0, 0, 0], frames: [], ballAt: [...S.ballAt], seen: 0, all: 0 };
-    say('Now stare into your ball… and send it to me.', 'Keep sending. Don’t let go of it.');
-    $('#timerFill').style.width = '0%';
-    buttons([{ label: 'Cancel', run: () => go('ready') }]);
+    S.escape = () => go('ready');
+    buttons([]);
+    voice.say('Now. Stare into your ball… and send it to me.');
     sfx.drumStart();
   },
   lost() {
-    say('I lost your thought.', 'Sit still, face the stage, and send it to me again.');
+    say('I lost your thought.', 'Sit still and face the stage.',
+      'I lost your thought. Sit still, face the stage, and we will try again.');
     buttons([
       { label: 'Try again', primary: true, run: () => go('ready') },
-      { label: 'Connect again', run: () => go('calibrate') },
+      { label: 'Connect again', run: () => go('prelude') },
     ]);
   },
   shuffle(t) {
-    say('I have received it. Now let me mix them up…', '');
+    say('I have received it. Now let me mix them up…', '', 'I have received it. Now, let me mix them up.');
     buttons([]);
     runShuffle(t);
   },
   reveal(t) {
-    say('Your ball is…', '');
+    say('Your ball is…', '', 'Your ball is…');
     buttons([]);
     runReveal(t);
   },
   verdict() {
     const b = S.result.ball;
     if (S.mode === 'camera') {
-      say(`Your ball is… the ${W(b)} one!`, 'Volunteer, was I right?');
+      say(`Your ball is… the ${W(b)} one!`, 'Volunteer, was I right?', `The ${BALLS[b].name} one! Was I right?`);
       buttons([
         { label: 'Yes, that’s right', primary: true, run: () => mark(true) },
         { label: 'No, wrong ball', run: () => mark(false) },
       ]);
     } else {
-      say(`Your ball is… the ${W(b)} one!`, 'Rehearsal with the mouse.');
+      say(`Your ball is… the ${W(b)} one!`, 'Rehearsal with the mouse.', `The ${BALLS[b].name} one!`);
       buttons([
         { label: 'Play again', primary: true, run: () => go('ready') },
         { label: 'Reveal the secret', run: openExplain },
@@ -743,9 +771,8 @@ const STATES = {
     }
   },
   after() {
-    const ok = S.result.correct;
-    say(ok ? 'Thank you, thank you!' : 'Even a magician misses sometimes.',
-      ok ? 'A round of applause for our volunteer, please.' : 'The connection was weak tonight.');
+    if (S.result.correct) say('Thank you, thank you!', '', 'Thank you! A round of applause for our volunteer, please.');
+    else say('Even a magician misses sometimes.', '', 'Even a magician misses sometimes.');
     buttons([
       { label: 'Play again', primary: true, run: () => go('ready') },
       { label: 'New volunteer', run: () => go('facecheck') },
@@ -827,7 +854,7 @@ function startMouse() {
   S.mode = 'mouse';
   S.model = null;
   S.selfTest = null;
-  go('calibrate');
+  go('prelude');
 }
 
 // ---------- from face points to five numbers ----------
@@ -993,17 +1020,17 @@ function faceAdvice(o) {
 // ---------- the ritual: breathing, then smoke that travels from ball to ball ----------
 // Hidden purpose: a controlled calibration. The smoke tells the eyes where to look,
 // and each ball is visited twice so the program can test itself.
-const CAL_LINES = [
-  (b) => `Open your eyes. Look into the ${W(b)} ball. Can you see the smoke inside?`,
-  (b) => `The smoke drifts into the ${W(b)} ball. Follow it.`,
-  (b) => `…and now into the ${W(b)} ball.`,
-  (b) => `Once more. It floats back to the ${W(b)} ball.`,
-  (b) => `…over to the ${W(b)} ball.`,
-  (b) => `…and settles in the ${W(b)} ball. Keep watching.`,
+const CAL_VOICE = [
+  (b) => `Open your eyes. Find the smoke, in the ${BALLS[b].name} ball.`,
+  (b) => `It drifts to the ${BALLS[b].name} ball.`,
+  (b) => `Now, the ${BALLS[b].name} ball.`,
+  (b) => `Once more. Back to the ${BALLS[b].name} ball.`,
+  (b) => `The ${BALLS[b].name} ball.`,
+  (b) => `And it settles, in the ${BALLS[b].name} ball.`,
 ];
 function calAnnounce() {
   const c = S.cal, b = S.ballAt[CAL.order[c.i]];
-  say(CAL_LINES[c.i](b), 'Breathe slowly. Watch the smoke.');
+  voice.say(CAL_VOICE[c.i](b));
   ballEls.forEach((el, i) => {
     el.classList.toggle('smoky', i === b);
     el.classList.toggle('glow', i === b);
@@ -1025,8 +1052,8 @@ function breathStep(c, now) {
   const key = half + Math.floor(el / cycle);
   if (key === c.half) return;
   c.half = key;
-  if (half === 'in') say(el < cycle ? 'Close your eyes. Breathe in slowly…' : 'Breathe in again… slowly…', 'Relax. Keep your head still.');
-  else say('…and breathe out.', 'Relax. Keep your head still.');
+  if (half === 'in') voice.say(el < cycle ? 'Breathe in, slowly…' : 'Breathe in again…');
+  else voice.say('And breathe out…');
   sfx.breath(half, (half === 'in' ? BREATH.in : BREATH.out) / 1000);
 }
 function calStep(o, dt, now) {
@@ -1036,7 +1063,7 @@ function calStep(o, dt, now) {
   if (now - c.start < (c.i === 0 ? CAL.firstSettle : CAL.settle)) return;
   if (S.mode === 'mouse') o = { face: true, valid: true, f: null };   // rehearsal: the ritual just runs on time
   if (!o.face) {
-    if (!c.lost) { c.lost = true; $('#sub').textContent = 'I’ve lost you. Face the stage; I’ll wait.'; }
+    if (!c.lost) { c.lost = true; voice.say('I have lost you. Face the stage.'); }
     return;
   }
   if (c.lost) { c.lost = false; calAnnounce(); }
@@ -1072,7 +1099,6 @@ function lookStep(o, dt, now) {
       L.frames.push({ dt, ball: null });
     }
   }
-  $('#timerFill').style.width = `${clamp(L.valid / LOOK.need, 0, 1) * 100}%`;
   if (L.valid >= LOOK.need || elapsed >= LOOK.maxWall) {
     if (L.valid < LOOK.minValid) { go('lost'); return; }
     let slot = 0;
@@ -1165,6 +1191,7 @@ function refreshChrome() {
   crystal.classList.toggle('secret', S.machine);
   lastStatus = '';
   $('#tSound').setAttribute('aria-pressed', String(sfx.on));
+  $('#tVoice').setAttribute('aria-pressed', String(voice.on));
   if (!S.machine) {
     ballEls.forEach((_, b) => ring(b, null));
     $('#gazeMark').hidden = true;
@@ -1312,12 +1339,14 @@ $('#explain').addEventListener('click', (e) => { if (e.target.id === 'explain') 
 
 // ---------- presenter toggles ----------
 function toggleMachine() { S.machine = !S.machine; refreshChrome(); }
-function toggleSound() { sfx.on = !sfx.on; if (!sfx.on) sfx.drumStop(); refreshChrome(); }
+function toggleSound() { sfx.on = !sfx.on; if (!sfx.on) { sfx.drumStop(); voice.stop(); } refreshChrome(); }
+function toggleVoice() { voice.on = !voice.on; if (!voice.on) voice.stop(); refreshChrome(); }
 function toggleFull() {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
   else document.exitFullscreen?.().catch(() => {});
 }
 $('#tSound').addEventListener('click', () => { sfx.unlock(); toggleSound(); });
+$('#tVoice').addEventListener('click', toggleVoice);
 $('#tFull').addEventListener('click', toggleFull);
 document.addEventListener('fullscreenchange', () => {
   $('#tFull').setAttribute('aria-pressed', String(!!document.fullscreenElement));
@@ -1327,11 +1356,13 @@ addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (!$('#explain').hidden) { if (e.key === 'Escape') closeExplain(); return; }
   const k = e.key.toLowerCase();
+  if (k === 'escape' && S.escape) { S.escape(); return; }
   if ((k === ' ' || k === 'enter') && !(e.target instanceof HTMLButtonElement)) {
     if (S.primary) { e.preventDefault(); S.primary.click(); }
   } else if (k === 'v') toggleMachine();
   else if (k === 'm') { sfx.unlock(); toggleSound(); }
   else if (k === 'f') toggleFull();
+  else if (k === 't') toggleVoice();
 });
 
 // ---------- sound (made in the browser, no files) ----------
@@ -1432,6 +1463,38 @@ const sfx = {
     this.roll = null;
   },
 };
+
+// ---------- the magician's voice (the browser's built-in speech; silent if none is installed) ----------
+const voice = {
+  on: true, v: null, timer: 0,
+  ok() { return this.on && sfx.on && 'speechSynthesis' in window; },
+  pick() {
+    const vs = speechSynthesis.getVoices();
+    const liked = ['Google UK English Male', 'Microsoft Ryan', 'Microsoft Guy', 'Microsoft George', 'Daniel', 'Arthur', 'Alex', 'Google US English'];
+    this.v = liked.map((n) => vs.find((v) => v.name.includes(n))).find(Boolean) || vs.find((v) => /^en([-_]|$)/i.test(v.lang)) || null;
+  },
+  say(text) {
+    if (!this.ok()) return;
+    const words = text.replace(/<[^>]+>/g, '').replace(/\b[A-Z]{2,}\b/g, (w) => w.toLowerCase());
+    speechSynthesis.cancel();
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {          // Chrome drops a speak() that follows cancel() too closely
+      const u = new SpeechSynthesisUtterance(words);
+      if (this.v) { u.voice = this.v; u.lang = this.v.lang; }
+      u.rate = 0.9;
+      u.pitch = 0.8;
+      speechSynthesis.speak(u);
+    }, 80);
+  },
+  stop() {
+    clearTimeout(this.timer);
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+  },
+};
+if ('speechSynthesis' in window) {
+  voice.pick();
+  speechSynthesis.addEventListener('voiceschanged', () => voice.pick());
+}
 
 // ---------- floating dust in the spotlights ----------
 function startMotes() {

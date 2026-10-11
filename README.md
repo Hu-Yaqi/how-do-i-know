@@ -20,12 +20,13 @@ This needs an internet connection when the page loads. No internet? On Windows, 
 
 ## How to play
 
+- Turn your sound on. The magician speaks the directions, and the screen goes quiet while you follow them.
 - Sit in the middle, about an arm's length from the screen, with light on your face.
 - Follow the magician: breathe, watch the smoke, choose a ball in your mind, then stare into it.
 - After a round, click **Reveal the secret** to see how the trick works.
 - No webcam? Click **Rehearse with the mouse**.
 
-Keys: Space presses the main button. F is full screen. M turns sound on or off. V is the secret view, which shows what the camera sees (keep it off while you perform).
+Keys: Space presses the main button. Esc stops the breathing or the staring step. F is full screen. M turns all sound on or off. T turns only the voice on or off (if you'd rather speak the lines yourself). V is the secret view, which shows what the camera sees (keep it off while you perform).
 
 ## Privacy
 
